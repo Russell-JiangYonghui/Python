@@ -1,0 +1,1 @@
+GLOBAL_CNT = 0
