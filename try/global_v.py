@@ -1,1 +1,2 @@
 GLOBAL_CNT = 0
+GLOBAL_LIST = []

@@ -153,10 +153,10 @@ def islater(t,deadtime):
 
 # Fuzk1ji1Z
 if __name__ == '__main__':
-    isFirst = True
     with open('sources/conf.txt', 'r') as f:
         list =  f.read().split(' ')
         for l in list:
+            isFirst = True
             for i in range(1,101):
                 print '-------------------------------------------------------------------------------------------------------------------------'
                 URL = ('https://weibo.cn/search/mblog?hideSearchFrame=&keyword={key}&page={index}').format(key = l,index = i)
