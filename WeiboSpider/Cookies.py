@@ -6,12 +6,12 @@ import sys
 import  time
 import  string
 import re
+import chardet
 from BeautifulSoup import BeautifulSoup
 type = sys.getfilesystemencoding()
 reload(sys)
+sys.setdefaultencoding("UTF-8")
 from Tweet import *
-sys.setdefaultencoding('utf8')
-
 conn = MySQLdb.connect(
     host = 'localhost',
     port = 3306,
@@ -23,18 +23,27 @@ conn = MySQLdb.connect(
 
 def getHtml(url,user_agent="wswp",num_retries=2):       #下载网页，如果下载失败重新下载两次
     print '开始下载网页：',url
-    #   headers = {'User-Agent':'Mozilla/5.0 (Windows NT 6.1; rv:24.0) Gecko/20100101 Firefox/24.0'}
-    #SCF	AvVs2H008mxqslMB6uEFBk4hXXW2WtT0KFikNwExNMiovNaEuwvKtQCpjghkMMWzBuHCT8s_6ad4G_dRyxmj0LY.	.weibo.cn	/	2027/11/8 上午10:22:14	91 B	✓
-    headers = {"User-agent":user_agent,"Cookie":"SUHB= 0ebtdCqmZJ0h0v ;_T_WM=ecef07e0e16a63a6d9d4b6424df18c93;SUB=_2A253DV5QDeRhGeVO7VAR9CbLyTmIHXVUDmIYrDV6PUJbkdANLVDzkW2NBIMTqkbX-_QovdeR9YceSb5ymw..;SCF = AiAHiwGDBPB3takCrA3dxrZklkyUgDkVHNPRPLqK4rqBDGODi4Whs36tOtTskI6ud_EWkj09KmQoDFHAinBRWDY.;SSOLoginState=1510551040"}
+    headers = {"User-agent": user_agent, "Cookie": "ALF=1517823886;"
+                                                   "SUBP=0033WrSXqPxfM725Ws9jqgMF55529P9D9WWbLdpMbVsJ5dMk9R7IWnev5JpX5K-hUgL.FoqXShM71h5X1hM2dJLoIpWbds8bds8bds8bds8bds8b;"
+                                                   "SUHB=0cSnpl44eppAQk;"
+                                                   "_T_WM=9c1eb8a8b2847f1ee9327e0a22b57987;"
+                                                   "SUB=_2A253VOqDDeRhGeBK71UR-C7IwzuIHXVUtvbLrDV6PUJbktBeLWXlkW1NR60m9UfyyLtCPb5Y8v7jOqLVj61SXHK0;"
+                                                   "SCF=AtCwKsAwnK2G89SnkDwG7F--IgYr6UYaE_TiVP3hyzWTZ0hHPR7vkxaIYP7CK3BHDhrczD3ARyNCzysT9afBm9U.;"
+                                                   "SSOLoginState=1515231955"}
     request = urllib2.Request(url,headers=headers)      #request请求包
     try:
-        html = urllib2.urlopen(request).read()          #GET请求
+        html = urllib2.urlopen(request).read()        #GET请求
+        # typeEncode = sys.getfilesystemencoding()  ##系统默认编码
+        # infoencode = chardet.detect(html).get('encoding', "GBK")  ##通过第3方模块来自动提取网页的编码
+        # html1 = html.decode(infoencode, 'ignore').encode(typeEncode)  ##先转换成unicode编
+        # print html1
     except urllib2.URLError as e:
         print "下载失败：",e.reason
         html = None
         if num_retries > 0:
             if hasattr(e,'code') and 500 <= e.code < 600:
-                return getHtml(url,num_retries-1)
+                # return getHtml(url,num_retries-1)
+                return getHtml(url)
     return html
 
 def normalizetime(time1):
@@ -92,7 +101,7 @@ def conmments(id,oldtime):
     mp = soup.findAll('input',{'name':'mp'})
     print 'mp',mp
     if len(mp) is 0:#if there is no conmments,the get the first one directly
-        max = '1';
+        max = '1'
     else:
         max = mp[0]['value']
     print max
@@ -106,7 +115,6 @@ def conmments(id,oldtime):
         for c in list:
             time.sleep(1)
             conmment = c.text
-
             cont = ''
             if '回复@' in conmment:
                 pos = conmment.index(':')
