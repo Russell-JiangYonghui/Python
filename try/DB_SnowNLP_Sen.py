@@ -1,7 +1,5 @@
 # coding=utf8
-# this file try to delete the stop words from the words list
-# but the question is that the stop words dic is not fat to this data
-# so i will build a new stop words Dic by myself according to the data set
+# use snowNLP to get the emotional polarity result of the sentence
 from snownlp import SnowNLP
 import global_v
 import Sort as s
@@ -12,9 +10,25 @@ sys.setdefaultencoding('utf-8')
 # coding=utf8
 import jieba
 import MySQLdb
-import DBUtils as dbu
 # 这是读取数据库数据
-# 选取topK词语
+# 进行情感分析结果
+conn = MySQLdb.connect(
+    host = 'localhost',
+    port = 3306,
+    user = 'root',
+    passwd = 'root',
+    db = 'Weibo',
+    charset = 'UTF8'
+)
+def query():
+    cur = conn.cursor()
+    sql = 'select content from tweets  where time >\'2017-12-01 09:48:14\' '
+    aa = cur.execute(sql)
+    info = cur.fetchmany(aa)
+    cur.execute(sql)
+    conn.commit()
+    cur.close()
+    return  info
 def qselect(A,k):
     if len(A)<k:
         return A
@@ -36,21 +50,13 @@ def List2Dic(list):
         wordsDic[i] +=1
     return wordsDic
 def selectAndCut():
-    sql = 'select content from tweets  where time >\'2017-12-01 09:48:14\' '
-    info = dbu.query(sql)
+    info = query()
     list1 = []
     list2 = []
     stops = f.readLine("sources/stop.txt")
     for ii in info:
-        list = jieba.cut(ii[0])
-        for i in list:
-            global_v.GLOBAL_LIST.append(i.strip())
-    words = s.stopwordsDel(stops,global_v.GLOBAL_LIST)
-    dic =  s.Sort(words,100)
-    for d in dic:
-        print d,dic[d]
-
-
+       print ii[0]
+       print SnowNLP(ii[0]).sentiments
 
 if __name__ == '__main__':
     selectAndCut()

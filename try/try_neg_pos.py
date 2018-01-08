@@ -9,6 +9,8 @@ sys.setdefaultencoding('utf-8')
 import jieba
 import MySQLdb
 
+#simple method to get the senti score
+#bad result
 conn = MySQLdb.connect(
     host = 'localhost',
     port = 3306,
@@ -22,22 +24,22 @@ def readline(filename):
     list = []
     # while 1:
     line = file.readline()
+    file.close()
     return line
     #     if not line:
     #         break
     #     list.append(line)
     # return list
 def readfile(filename):
-    list = []
     file = open(filename)
+    list = []
     while 1:
         line = file.readline()
+    # return line
         if not line:
             break
-        type = chardet.detect(line)
-        text1 = line.decode(type["encoding"])
-        list.append(text1)
-        # print text1
+        list.append(line)
+        file.close()
     return list
 def query():
     cur = conn.cursor()
@@ -137,23 +139,23 @@ def selectAndCut():
     l = []
     senList = []
     try:
-        senList = readfile('/Users/mac/Desktop/svm/BosonNLP_sentiment_score.txt')#获取情感词典中的情感词
+        senList = readfile('sources/BosonNLP_sentiment_score.txt')#获取情感词典中的情感词
     except Exception as e:
         print e.message
     for i in range(0,1000):
         try:
-            try:
-                filename = ('/Users/mac/Desktop/svm/yuliao/ChnSentiCorp_htl_ba_2000/neg/neg.{index}.txt').format(index=i)
-                print 'list:',(readfile(filename)[0]).encode('utf-8')
-                li1 = jieba.cut(readfile(filename)[0])
-                for i in li1:
-                    l.append(i)
-                    print i,
-            except Exception as e:
-                print e.message,'Es'
-            classifyWords(l , senList)
-        except:
-            print 'select failed!'
+            filename = ('/Users/mac/Desktop/svm/yuliao/ChnSentiCorp_htl_ba_2000/neg/neg.{index}.txt').format(index=i)
+            print 'list:',(readfile(filename))
+            li1 = jieba.cut(readfile(filename)[0])
+            for i in li1:
+                l.append(i)
+                print i,
+        except Exception as e:
+            print e.message,'Es'
+        try:
+            classifyWords(l,senList)
+        except  Exception as e:
+            print e.message
         print "++++++++++++++++++++++++++++++++++++++++++++++++++"
 
 if __name__ == '__main__':
