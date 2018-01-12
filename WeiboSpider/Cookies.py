@@ -33,10 +33,7 @@ def getHtml(url,user_agent="wswp",num_retries=2):       #下载网页，如果�
     request = urllib2.Request(url,headers=headers)      #request请求包
     try:
         html = urllib2.urlopen(request).read()        #GET请求
-        # typeEncode = sys.getfilesystemencoding()  ##系统默认编码
-        # infoencode = chardet.detect(html).get('encoding', "GBK")  ##通过第3方模块来自动提取网页的编码
-        # html1 = html.decode(infoencode, 'ignore').encode(typeEncode)  ##先转换成unicode编
-        # print html1
+
     except urllib2.URLError as e:
         print "下载失败：",e.reason
         html = None
@@ -47,7 +44,6 @@ def getHtml(url,user_agent="wswp",num_retries=2):       #下载网页，如果�
     return html
 
 def normalizetime(time1):
-    print '======================time to normalize:',time1
     if '分钟前' in time1:#几分钟前
         d = datetime.now()
         nPos = time1.index('分')
@@ -63,21 +59,15 @@ def normalizetime(time1):
         m = time1[:2]
         da = time1[3:5]
         mi = time1[7:12]+':00'
-        print d+'-'+m+'-'+da+' '+mi
+        # print d+'-'+m+'-'+da+' '+mi
         return datetime.strptime(d+'-'+m+'-'+da+' '+mi,'%Y-%m-%d %H:%M:%S')
     else:
-        print 'time1:',time1[:18]
+        # print 'time1:',time1[:18]
         return datetime.strptime(time1[:18],'%Y-%m-%d %H:%M:%S')
     # return bool(0)
 def save(tweet):
     sql = ''
     try:
-        print '++++++++++++++++++++'
-        print tweet.user.strip()
-        print tweet.id
-        print tweet.t
-        print tweet.content
-        print '++++++++++++++++++++'
         try:
             sql = ('insert into tweets(id,user,time,content) values(\'{id}\',\'{user}\',\'{time}\',\'{content}\')').format(id=tweet.id,user = tweet.user.strip(), time = tweet.t, content = tweet.content)
         except:
@@ -99,19 +89,18 @@ def conmments(id,oldtime):
     html = getHtml(URL)
     soup = BeautifulSoup(html)
     mp = soup.findAll('input',{'name':'mp'})
-    print 'mp',mp
     if len(mp) is 0:#if there is no conmments,the get the first one directly
         max = '1'
     else:
         max = mp[0]['value']
-    print max
     for i in range(1, string.atoi(max)+1):
         time.sleep(1)
-        URL = ('https://weibo.cn/comment/{id}?rl=1&page={index}').format(id=newid, index=i+4)
+        URL = ('https://weibo.cn/comment/{id}?rl=1&page={index}').format(id=newid, index=i)
         html = getHtml(URL)
         soup = BeautifulSoup(html)
         #get the conmments content
         list = soup.findAll('span', {'class': 'ctt'})#find all the content:include weibo content and conmments
+        print list
         for c in list:
             time.sleep(1)
             conmment = c.text
@@ -121,22 +110,17 @@ def conmments(id,oldtime):
                 cont = c.text[(pos + 1):]
             else:
                 cont = c.text
-
             user = c.findPreviousSibling('a').string
 
             getid = c.findParent('div',{'class':'c'}).attrs[1][1]
             if(getid.__eq__('M_')):#id is M_ means this is the weibo content,and not conmments
                 d = 'M_'+id
                 t = normalizetime(oldtime)
-                print "deadLine:",deadline()
-                print 't',t
-                print islater(t,deadline())
+                print t,'-----',deadline()
                 if islater(t,deadline()):
                     tweet = Tweet(user,d,t,cont[1:])
+                    print tweet
                     save(tweet)
-                # else:
-                    # exit(0)
-            #
             else:
                 d = getid
                 t = normalizetime(c.findNextSibling('span', {'class': 'ct'}).text)
@@ -152,8 +136,6 @@ def deadline():
     d2 = d2 + timedelta(seconds=-d.second - 1)
     return d2
 def islater(t,deadtime):
-    print 't',t
-    print 'dead:',deadtime
     if t > deadtime:
         return True
     else:
@@ -168,9 +150,7 @@ if __name__ == '__main__':
             for i in range(1,101):
                 print '-------------------------------------------------------------------------------------------------------------------------'
                 URL = ('https://weibo.cn/search/mblog?hideSearchFrame=&keyword={key}&page={index}').format(key = l,index = i)
-                print "url:",URL
                 html = getHtml(URL)
-                print html
                 soup = BeautifulSoup(html)
                 list = soup.findAll('div',attrs={'id': True})
                 for a in list:
@@ -180,14 +160,11 @@ if __name__ == '__main__':
                     if a.attrs[1][1] .__eq__('pagelist'):
                         continue
                     time2 = a.findAll('span',{'class':'ct'})
-                    print 'text:',time2[0].text
                     d = deadline()
-                    print d
                     conmments(a.attrs[1][1][2:],time2[0].text)
                     print '-------------------------------------------------------------------------------------------------------------------------'
-
-                time.sleep(20)
                 if normalizetime(time2[0].text) < deadline():
                     print '抓取完毕'
                     break
+                time.sleep(20)
 
